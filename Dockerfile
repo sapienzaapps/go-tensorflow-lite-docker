@@ -3,10 +3,10 @@ ARG TF_VERSION
 
 FROM debian:buster AS builder
 
-RUN apt-get update && apt-get install -y build-essential openjdk-11-jdk-headless python3 zip unzip wget libatomic1
+RUN apt-get update && \
+    apt-get install -y build-essential openjdk-11-jdk-headless python3 zip \
+        unzip wget libatomic1 git-core python3-distutils python3-numpy
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
-    # \
-    #&& update-java-alternatives -s java-1.11.0-openjdk-armhf
 
 WORKDIR /src
 
@@ -15,8 +15,6 @@ ARG TF_VERSION
 RUN wget https://github.com/tensorflow/tensorflow/archive/refs/tags/v${TF_VERSION}.tar.gz \
     && tar xf v${TF_VERSION}.tar.gz \
     && rm v${TF_VERSION}.tar.gz
-
-RUN apt-get install -y git-core python3-distutils python3-numpy
 
 # CMAKE
 RUN echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/backports.list && apt-get update
@@ -30,7 +28,7 @@ RUN cmake --build . -j $(nproc)
 
 # Final stage
 ARG GO_VERSION
-FROM docker.io/library/golang:${GO_VERSION}
+FROM docker.io/library/golang:${GO_VERSION}-buster
 ARG TF_VERSION
 
 COPY --from=builder /src/tflite_build/libtensorflowlite_c.so /usr/local/lib/
